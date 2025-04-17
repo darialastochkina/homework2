@@ -1,4 +1,3 @@
-# Импортируем классы из src/utils.py
 from src.utils import Product, Category
 
 if __name__ == "__main__":
