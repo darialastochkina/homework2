@@ -19,23 +19,42 @@ def test_product_initialization(sample_product):
     assert sample_product.quantity == 5
 
 
-def test_category_initialization(sample_category, sample_product):
+def test_category_initialization(sample_category):
     assert sample_category.name == "Test Category"
     assert sample_category.description == "Test Description"
-    assert len(sample_category.products) == 1
-    assert sample_category.products[0] == sample_product
+    assert "Test Product, 100.0 руб. Остаток: 5 шт.\n" in sample_category.products
 
 
-def test_category_counter():
+def test_add_product():
     Category.category_count = 0
     Category.product_count = 0
-    product1 = Product("Product 1", "Description 1", 100.0, 5)
-    product2 = Product("Product 2", "Description 2", 200.0, 3)
-    category1 = Category("Category 1", "Description 1", [product1])
-    assert Category.category_count == 1
-    assert Category.product_count == 1
-    assert category1.name == "Category 1"
-    category2 = Category("Category 2", "Description 2", [product1, product2])
-    assert Category.category_count == 2
-    assert Category.product_count == 3
-    assert category2.name == "Category 2"
+
+    cat = Category("New Cat", "Desc")
+    prod = Product("NewProd", "Desc", 50.0, 2)
+
+    before = Category.product_count
+    cat.add_product(prod)
+    assert Category.product_count == before + 1
+    assert "NewProd, 50.0 руб. Остаток: 2 шт.\n" in cat.products
+
+
+def test_product_price_setter():
+    prod = Product("X", "Y", 100.0, 1)
+    prod.price = -10
+    assert prod.price == 100.0
+    prod.price = 200.0
+    assert prod.price == 200.0
+
+
+def test_new_product_classmethod():
+    data = {
+        "name": "CP",
+        "description": "Desc",
+        "price": 300.0,
+        "quantity": 10
+    }
+    cp = Product.new_product(data)
+    assert isinstance(cp, Product)
+    assert cp.name == "CP"
+    assert cp.price == 300.0
+    assert cp.quantity == 10
