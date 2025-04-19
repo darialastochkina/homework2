@@ -40,7 +40,7 @@ class Category:
         self,
         name: str,
         description: str,
-        products: Optional[List[Product]] = None,
+        products: Optional[List[Product]] = None
     ):
         self.name = name
         self.description = description
@@ -51,6 +51,8 @@ class Category:
 
     def add_product(self, product: Product) -> None:
         """Добавляет продукт в приватный список и инкрементирует счетчик."""
+        if not isinstance(product, Product):
+            raise TypeError("Можно добавлять только экземпляры Product")
         self.__products.append(product)
         Category.product_count += 1
 
