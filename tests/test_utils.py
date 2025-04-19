@@ -58,3 +58,10 @@ def test_new_product_classmethod():
     assert cp.name == "CP"
     assert cp.price == 300.0
     assert cp.quantity == 10
+
+
+def test_add_product_type_check():
+    cat = Category("Sample", "Desc")
+    with pytest.raises(TypeError) as exc:
+        cat.add_product("не продукт")
+    assert "экземпляры Product" in str(exc.value)
