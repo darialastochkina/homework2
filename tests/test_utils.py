@@ -65,3 +65,18 @@ def test_add_product_type_check():
     with pytest.raises(TypeError) as exc:
         cat.add_product("не продукт")
     assert "экземпляры Product" in str(exc.value)
+
+
+def test_product_str():
+    prod = Product("AAA", "desc", 50.0, 3)
+    assert str(prod) == "AAA, 50.0 руб. Остаток: 3 шт."
+
+
+def test_product_addition():
+    a = Product("A", "X", 100.0, 2)
+    b = Product("B", "Y", 200.0, 1)
+    assert a + b == 400.0
+
+
+def test_category_str(sample_category):
+    assert str(sample_category) == "Test Category, количество продуктов: 5 шт."
