@@ -32,11 +32,11 @@ class Product:
         )
 
     def __str__(self) -> str:
-        """Строковое представление продукта."""
+        """Название продукта, X руб. Остаток: X шт."""
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
-    def __add__(self, other: "Product") -> float:
-        """Складывает полную стоимость двух продуктов."""
+    def __add__(self, other: object) -> float:
+        """100×10 + 200×2 = 1400 — полная стоимость self + other."""
         if not isinstance(other, Product):
             return NotImplemented
         return self.price * self.quantity + other.price * other.quantity
@@ -72,6 +72,6 @@ class Category:
         return "".join(f"{str(p)}\n" for p in self.__products)
 
     def __str__(self) -> str:
-        """Строковое представление категории."""
-        total_qty = sum(p.quantity for p in self.__products)
-        return f"{self.name}, количество продуктов: {total_qty} шт."
+        """Название категории, количество продуктов: X шт."""
+        total = sum(p.quantity for p in self.__products)
+        return f"{self.name}, количество продуктов: {total} шт."

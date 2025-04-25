@@ -75,10 +75,8 @@ def test_product_str():
 def test_product_addition():
     a = Product("A", "X", 100.0, 2)
     b = Product("B", "Y", 200.0, 1)
-    # 100*2 + 200*1 = 400
     assert a + b == 400.0
 
 
 def test_category_str(sample_category):
-    # sample_category создаёт категорию с одним продуктом quantity=5
     assert str(sample_category) == "Test Category, количество продуктов: 5 шт."
