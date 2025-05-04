@@ -1,3 +1,14 @@
 [flake8]
+exclude =
+    .venv,
+    .venvdasha,
+    venv,
+    env,
+    build,
+    dist,
+    .git,
+    __pycache__
+
 max-line-length = 120
-exclude = .git,__pycache__,build,dist 
+
+extend-ignore = E203, W503 
