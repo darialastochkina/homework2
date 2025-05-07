@@ -10,7 +10,9 @@
 - Классы-наследники `Smartphone` (efficiency, model, memory, color)
   и `LawnGrass` (country, germination_period, color)
 - Магическое сложение `a + b` запрещено для разных классов (`TypeError`)
-- `Category.add_product()` пропускает только `Product` и его подклассы
+- `Category.add_product()` принимает только `Product` и его подклассы
+- Базовый абстрактный класс `BaseProduct` (для общей функциональности)
+- Класс-миксин `InitPrintMixin`, печатающий в консоль создание объекта
 
 ## Установка и запуск
 1. Клонировать репозиторий

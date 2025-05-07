@@ -1,23 +1,63 @@
 from typing import Dict
+from abc import ABC, abstractmethod
 
 
-class Product:
+class BaseProduct(ABC):
+    """
+    Абстрактный класс, описывающий общий интерфейс продукта.
+    """
     def __init__(self, name: str, description: str, price: float, quantity: int):
         self.name = name
         self.description = description
-        self.__price = price
+        self._price = price
         self.quantity = quantity
 
     @property
     def price(self) -> float:
-        return self.__price
+        return self._price
 
     @price.setter
     def price(self, value: float) -> None:
         if value > 0:
-            self.__price = value
+            self._price = value
         else:
-            raise ValueError("Цена не должна быть нулевой или отрицательной")
+            raise ValueError("Цена не может быть <= 0")
+
+    @abstractmethod
+    def total_cost(self) -> float:
+        """
+        Должен возвращать общую стоимость (price * quantity).
+        """
+
+
+class InitPrintMixin:
+    """
+    при создании экземпляра печатает базовую информацию.
+    """
+    def __new__(cls, *args, **kwargs):
+        inst = super().__new__(cls)
+        print(f"{cls.__name__} создан(а) с args={args}, kwargs={kwargs}")
+        return inst
+
+
+class Product(InitPrintMixin, BaseProduct):
+    """
+    Хранит name, description, price и quantity.
+    Поддерживает сложение и строковое представление.
+    """
+    def __init__(self, name: str, description: str, price: float, quantity: int):
+        super().__init__(name, description, price, quantity)
+
+    @property
+    def price(self) -> float:
+        return self._price
+
+    @price.setter
+    def price(self, value: float) -> None:
+        if value > 0:
+            self._price = value
+        else:
+            raise ValueError("Цена не может быть <= 0")
 
     @classmethod
     def new_product(cls, product_data: Dict) -> "Product":
@@ -36,7 +76,11 @@ class Product:
             return NotImplemented
         if type(self) is not type(other):
             raise TypeError("Нельзя складывать объекты разных классов")
-        return self.price * self.quantity + other.price * other.quantity
+        return self.total_cost() + other.total_cost()
+
+    def total_cost(self) -> float:
+        """Общая стоимость этого продукта."""
+        return self.price * self.quantity
 
 
 class Category:
