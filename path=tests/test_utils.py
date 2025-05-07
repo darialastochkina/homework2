@@ -1,5 +1,6 @@
 import pytest
 from src.utils import Product, Category, Smartphone, LawnGrass
+from src.utils import BaseProduct
 
 
 @pytest.fixture
@@ -62,3 +63,14 @@ def test_add_product_type_error():
     cat = Category("Test", "desc")
     with pytest.raises(TypeError):
         cat.add_product(123)
+
+
+def test_baseproduct_cannot_be_instantiated():
+    with pytest.raises(TypeError):
+        BaseProduct("X", "Y", 1.0, 1)
+
+
+def test_print_mixin_on_creation(capsys):
+    _ = Smartphone("M", "Mix", 100.0, 2, efficiency=1.0, model="A", memory=32, color="Red")
+    out = capsys.readouterr().out
+    assert "Smartphone создан(а) с args=('M', 'Mix', 100.0, 2" in out
