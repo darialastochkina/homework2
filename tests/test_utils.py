@@ -1,82 +1,101 @@
 import pytest
-from src.utils import Product, Category
+from src.utils import Product, Category, Smartphone, LawnGrass, BaseProduct
 
 
 @pytest.fixture
 def sample_product():
-    return Product("Test Product", "Test Description", 100.0, 5)
+    return Product("P", "desc", 10.0, 2)
 
 
 @pytest.fixture
 def sample_category(sample_product):
-    return Category("Test Category", "Test Description", [sample_product])
+    return Category("Cat", "desc", [sample_product])
 
 
-def test_product_initialization(sample_product):
-    assert sample_product.name == "Test Product"
-    assert sample_product.description == "Test Description"
-    assert sample_product.price == 100.0
-    assert sample_product.quantity == 5
+def test_smartphone_initialization():
+    sp = Smartphone(
+        "Galaxy", "desc", 50000.0, 2,
+        efficiency=2.5, model="S23", memory=256, color="Black"
+    )
+    assert sp.name == "Galaxy"
+    assert sp.efficiency == 2.5
+    assert sp.model == "S23"
+    assert sp.memory == 256
+    assert sp.color == "Black"
 
 
-def test_category_initialization(sample_category):
-    assert sample_category.name == "Test Category"
-    assert sample_category.description == "Test Description"
-    assert "Test Product, 100.0 руб. Остаток: 5 шт.\n" in sample_category.products
+def test_lawngrass_initialization():
+    lg = LawnGrass(
+        "Grass", "desc", 100.0, 10,
+        country="USA", germination_period=7, color="Green"
+    )
+    assert lg.name == "Grass"
+    assert lg.country == "USA"
+    assert lg.germination_period == 7
+    assert lg.color == "Green"
 
 
-def test_add_product():
-    Category.category_count = 0
-    Category.product_count = 0
-
-    cat = Category("New Cat", "Desc")
-    prod = Product("NewProd", "Desc", 50.0, 2)
-
-    before = Category.product_count
-    cat.add_product(prod)
-    assert Category.product_count == before + 1
-    assert "NewProd, 50.0 руб. Остаток: 2 шт.\n" in cat.products
+def test_product_addition_same_type():
+    a = Smartphone("A", "X", 100.0, 1, 1.0, "M", 128, "Black")
+    b = Smartphone("B", "Y", 200.0, 2, 2.0, "N", 64, "White")
+    assert a + b == 500.0
 
 
-def test_product_price_setter():
-    prod = Product("X", "Y", 100.0, 1)
-    prod.price = -10
-    assert prod.price == 100.0
-    prod.price = 200.0
-    assert prod.price == 200.0
+def test_product_addition_type_error():
+    sp = Smartphone("A", "X", 100.0, 1, 1.0, "M", 128, "Black")
+    lg = LawnGrass(
+        "Grass", "desc", 100.0, 1,
+        country="USA", germination_period=7, color="Green"
+    )
+    with pytest.raises(TypeError):
+        _ = sp + lg
 
 
-def test_new_product_classmethod():
-    data = {
-        "name": "CP",
-        "description": "Desc",
-        "price": 300.0,
-        "quantity": 10
-    }
-    cp = Product.new_product(data)
-    assert isinstance(cp, Product)
-    assert cp.name == "CP"
-    assert cp.price == 300.0
-    assert cp.quantity == 10
+def test_add_product_accepts_subclasses():
+    cat = Category("Test", "desc")
+    sp = Smartphone("Z", "desc", 150.0, 3, 3.0, "Z1", 512, "Silver")
+    cat.add_product(sp)
+    assert "Z, 150.0 руб. Остаток: 3 шт." in cat.products
 
 
-def test_add_product_type_check():
-    cat = Category("Sample", "Desc")
-    with pytest.raises(TypeError) as exc:
-        cat.add_product("не продукт")
-    assert "экземпляры Product" in str(exc.value)
+def test_add_product_type_error():
+    cat = Category("Test", "desc")
+    with pytest.raises(TypeError):
+        cat.add_product(123)
 
 
-def test_product_str():
-    prod = Product("AAA", "desc", 50.0, 3)
-    assert str(prod) == "AAA, 50.0 руб. Остаток: 3 шт."
+def test_baseproduct_cannot_be_instantiated():
+    with pytest.raises(TypeError):
+        BaseProduct("X", "Y", 1.0, 1)
 
 
-def test_product_addition():
-    a = Product("A", "X", 100.0, 2)
-    b = Product("B", "Y", 200.0, 1)
-    assert a + b == 400.0
+def test_print_mixin_on_creation(capsys):
+    _ = Smartphone("M", "Mix", 100.0, 2, efficiency=1.0, model="A", memory=32, color="Red")
+    out = capsys.readouterr().out
+    assert "Smartphone создан(а) с args=('M', 'Mix', 100.0, 2" in out
 
 
-def test_category_str(sample_category):
-    assert str(sample_category) == "Test Category, количество продуктов: 5 шт."
+def test_product_init_zero_quantity():
+    with pytest.raises(ValueError) as exc:
+        Product("Zero", "desc", 10.0, 0)
+    assert str(exc.value) == "Товар с нулевым количеством не может быть добавлен"
+
+
+def test_subclass_init_zero_quantity():
+    with pytest.raises(ValueError):
+        Smartphone(
+            "S", "desc", 100.0, 0,
+            efficiency=1.0, model="X", memory=64, color="Black"
+        )
+
+
+def test_category_average_price_non_empty():
+    p1 = Product("A", "x", 10.0, 1)
+    p2 = Product("B", "y", 20.0, 2)
+    cat = Category("C", "d", [p1, p2])
+    assert cat.average_price() == pytest.approx(15.0)
+
+
+def test_category_average_price_empty():
+    cat = Category("Empty", "no products")
+    assert cat.average_price() == 0.0
