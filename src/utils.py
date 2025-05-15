@@ -1,45 +1,139 @@
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
+from abc import ABC, abstractmethod
 
 
-class Product:
+class BaseProduct(ABC):
+    @abstractmethod
     def __init__(self, name: str, description: str, price: float, quantity: int):
+        ...
+
+    @property
+    @abstractmethod
+    def price(self) -> float:
+        ...
+
+    @price.setter
+    @abstractmethod
+    def price(self, new_price: float) -> None:
+        ...
+
+    @abstractmethod
+    def __str__(self) -> str:
+        ...
+
+    @abstractmethod
+    def __add__(self, other: object) -> float:
+        ...
+
+
+class LoggingMixin:
+    def __new__(cls, *args, **kwargs):
+        inst = super().__new__(cls)
+        print(f"{cls.__name__} создан(а) с args={args}, kwargs={kwargs}")
+        return inst
+
+
+class Product(LoggingMixin, BaseProduct):
+    """
+    Хранит name, description, price и quantity.
+    Поддерживает сложение, сравнение и строковое представление.
+    """
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Product):
+            return (
+                self.name == other.name and
+                self.description == other.description and
+                self.price == other.price and
+                self.quantity == other.quantity
+            )
+        if isinstance(other, str):
+            return Product.__str__(self) == other
+        return NotImplemented
+
+    def __init__(self, name: str, description: str, price: float, quantity: int):
+        if quantity == 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
         self.name = name
         self.description = description
         self.__price = price
         self.quantity = quantity
+        super().__init__(name, description, price, quantity)
 
     @property
     def price(self) -> float:
-        """Геттер приватного атрибута цены."""
         return self.__price
 
     @price.setter
-    def price(self, value: float) -> None:
-        """Сеттер с проверкой на положительное значение."""
-        if value > 0:
-            self.__price = value
+    def price(self, new_price: float) -> None:
+        if new_price > 0:
+            self.__price = new_price
         else:
             print("Цена не должна быть нулевая или отрицательная")
 
-    @classmethod
-    def new_product(cls, product_data: Dict) -> "Product":
-        """Создает экземпляр Product из словаря."""
-        return cls(
-            name=product_data["name"],
-            description=product_data["description"],
-            price=product_data["price"],
-            quantity=product_data["quantity"],
-        )
-
     def __str__(self) -> str:
-        """Название продукта, X руб. Остаток: X шт."""
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other: object) -> float:
-        """100×10 + 200×2 = 1400 — полная стоимость self + other."""
-        if not isinstance(other, Product):
-            return NotImplemented
-        return self.price * self.quantity + other.price * other.quantity
+        if type(self) is type(other):
+            return self.price * self.quantity + other.price * other.quantity
+        raise TypeError("Операнд справа должен иметь тот же тип")
+
+    @classmethod
+    def new_product(cls, data: Dict) -> "Product":
+        return cls(
+            name=data["name"],
+            description=data["description"],
+            price=data["price"],
+            quantity=data["quantity"],
+        )
+
+
+class Smartphone(Product):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        efficiency: float,
+        model: str,
+        memory: int,
+        color: str,
+    ):
+        super().__init__(name, description, price, quantity)
+        self.efficiency = efficiency
+        self.model = model
+        self.memory = memory
+        self.color = color
+
+    def __str__(self) -> str:
+        return (
+            f"{self.name}, {self.model}, {self.memory}, {self.color}, "
+            f"{self.price} руб. Остаток: {self.quantity} шт."
+        )
+
+
+class LawnGrass(Product):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        price: float,
+        quantity: int,
+        country: str,
+        germination_period: int,
+        color: str,
+    ):
+        super().__init__(name, description, price, quantity)
+        self.country = country
+        self.germination_period = germination_period
+        self.color = color
+
+    def __str__(self) -> str:
+        return (
+            f"{self.name}, {self.country}, {self.germination_period}, {self.color}, "
+            f"{self.price} руб. Остаток: {self.quantity} шт."
+        )
 
 
 class Category:
@@ -54,24 +148,27 @@ class Category:
     ):
         self.name = name
         self.description = description
-        self.__products = products if products is not None else []
-
+        self._products: List[Product] = products or []
         Category.category_count += 1
-        Category.product_count += len(self.__products)
+        Category.product_count += len(self._products)
 
     def add_product(self, product: Product) -> None:
-        """Добавляет продукт в приватный список и инкрементирует счетчик."""
         if not isinstance(product, Product):
-            raise TypeError("Можно добавлять только экземпляры Product")
-        self.__products.append(product)
+            raise TypeError("Можно добавлять только объекты типа Product или его наследников.")
+        self._products.append(product)
         Category.product_count += 1
+        print("Товар добавлен")
+        print("Обработка добавления товара завершена")
 
     @property
-    def products(self) -> str:
-        """Геттер, возвращающий все товары через их __str__."""
-        return "".join(f"{str(p)}\n" for p in self.__products)
+    def products(self) -> List[Product]:
+        return self._products
 
-    def __str__(self) -> str:
-        """Название категории, количество продуктов: X шт."""
-        total = sum(p.quantity for p in self.__products)
-        return f"{self.name}, количество продуктов: {total} шт."
+    def get_average_price(self) -> float:
+        """Средняя цена всех товаров или 0.0 если нет товаров."""
+        if not self._products:
+            return 0.0
+        return sum(p.price for p in self._products) / len(self._products)
+
+    def __iter__(self):
+        return iter(self._products)
